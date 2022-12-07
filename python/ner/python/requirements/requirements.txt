@@ -1,0 +1,9 @@
+tensorflow
+wandb
+pandas
+scikit-learn
+numpy
+transformers
+sentencepiece
+seqeval
+torch
