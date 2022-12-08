@@ -243,6 +243,7 @@ class NERClassificationModel:
         model_name = args.model_name
         num_epoch = args.num_epoch
         max_length = args.max_length
+        batch_size = args.batch_size
 
         export_model_path = os.path.join(export_path, str(model_name).replace("/","-"))
 
@@ -298,6 +299,6 @@ class NERClassificationModel:
         )
         nr_model.fit([train_dataset['tr_inputs'], train_dataset['tr_masks']], train_dataset['tr_tags']
                      , validation_data=([train_dataset['val_inputs'], train_dataset['val_masks']], train_dataset['val_tags']), epochs=num_epoch,
-                     shuffle=False, batch_size=32
+                     shuffle=False, batch_size=batch_size
                      ,callbacks=[fl_score_callback, WandbCallback(save_model=False)])
         nr_model.save_weights(os.path.join(export_model_path, "model.h5"))

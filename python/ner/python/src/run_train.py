@@ -24,6 +24,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "--max_length", help="max_length", default=128
     )
+    
+    parser.add_argument(
+        "--batch_size", help="batch_size", default=32
+    )
     args, _ = parser.parse_known_args()
 
     model = NERClassificationModel()
