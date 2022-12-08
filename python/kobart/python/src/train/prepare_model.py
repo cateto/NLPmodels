@@ -7,6 +7,21 @@ from transformers import BartForConditionalGeneration
 from bart_onnx.generation_onnx import BARTBeamSearchGenerator
 
 
+class BartDecoderWrapper(torch.nn.Module):
+    def __init__(self, model) -> None:
+        super().__init__()
+        self.model = model
+
+    def forward(self, encoder_hidden_state, decoder_input_ids):
+        output = self.model(
+            decoder_input_ids=decoder_input_ids,
+            return_dict=True,
+            output_hidden_states=True,
+            encoder_outputs=(encoder_hidden_state, None, None),
+        )
+        return output.logits, output.encoder_last_hidden_state
+
+
 class OnnxModelConverter:
     def __init__(self, prefix):
         self.prefix = prefix
@@ -22,6 +37,9 @@ class OnnxModelConverter:
         inputs = tokenizer([text], max_length=max_length, return_tensors="pt")
 
         return inputs
+    
+    def convert_vanlia(self):
+        model = BartForConditionalGeneration.from_pretrained('gogamza/kobart-summarization')
 
     def convert(self):
 
@@ -46,32 +64,52 @@ class OnnxModelConverter:
             file_name = 'model.onnx'
             model_onnx_path = os.path.join(model_onnx_path, file_name)
 
-        # summary_ids = model.generate(
-        #     inputs["input_ids"],
-        #     attention_mask=inputs["attention_mask"],
-        #     num_beams=torch.tensor(num_beams),
-        #     max_length=torch.tensor(max_length),
-        #     early_stopping=True,
-        #     eos_token_id=torch.tensor(eos_token_id)
-        # )
-
-        export(
-            bart_script_model,
-            (
-                inputs["input_ids"],
-                inputs["attention_mask"],
-                torch.tensor(num_beams),
-                torch.tensor(max_length),
-                torch.tensor(eos_token_id),
-            ),
-            model_onnx_path,
-            opset_version=13,
-            input_names=["input_ids", "attention_mask", "num_beams", "max_length", "decoder_start_token_id"],
-            output_names=["summary_ids"],
-            dynamic_axes={
-                "input_ids": {0: "batch", 1: "seq"},
-                "attention_mask": {0: "batch", 1: "seq"},
-                "summary_ids": {0: "batch", 1: "seq_out"},
-            },
+        summary_ids = model.generate(
+            inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            num_beams=num_beams,
+            max_length=max_length,
+            early_stopping=True,
+            eos_token_id=eos_token_id
         )
+
+        torch.onnx.export(
+                bart_script_model,
+                (
+                    torch.tensor(inputs["input_ids"]),
+                    torch.tensor(inputs["attention_mask"]),
+                    torch.tensor(num_beams),
+                    torch.tensor(max_length),
+                    torch.tensor(model.config.decoder_start_token_id),
+                ),
+                model_onnx_path,
+                opset_version=14,
+                input_names=["input_ids", "attention_mask", "num_beams", "max_length", "decoder_start_token_id"],
+                output_names=["output_ids"],
+                dynamic_axes={
+                    "input_ids": {0: "batch", 1: "seq"},
+                    "output_ids": {0: "batch", 1: "seq_out"},
+                },
+                verbose=False,
+        )
+        
+        # export(
+        #     bart_script_model,
+        #     (
+        #         inputs["input_ids"],
+        #         inputs["attention_mask"],
+        #         torch.tensor(num_beams),
+        #         torch.tensor(max_length),
+        #         torch.tensor(eos_token_id),
+        #     ),
+        #     model_onnx_path,
+        #     opset_version=13,
+        #     input_names=["input_ids", "attention_mask", "num_beams", "max_length", "decoder_start_token_id"],
+        #     output_names=["summary_ids"],
+        #     dynamic_axes={
+        #         "input_ids": {0: "batch", 1: "seq"},
+        #         "attention_mask": {0: "batch", 1: "seq"},
+        #         "summary_ids": {0: "batch", 1: "seq_out"},
+        #     },
+        # )
 

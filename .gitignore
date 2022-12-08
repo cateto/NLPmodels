@@ -17,6 +17,10 @@ wandb/
 # ignore ide path
 .idea/
 
+# ignore the pickle file
+
+.pkl
+
 # Distribution / packaging
 .Python
 build/

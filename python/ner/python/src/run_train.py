@@ -22,9 +22,6 @@ if __name__ == '__main__':
     )
     args, _ = parser.parse_known_args()
 
-    # corpus_file_path = '/repository/NER/data/k_corpus/json_data/corpus_v2.json'
-    # export_path = '/repository/som/'
-
     model = NERClassificationModel()
     model.train(args)
 

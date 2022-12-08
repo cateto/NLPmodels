@@ -23,7 +23,7 @@ RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 RUN apt-get install -y python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY python /lab_ner/python
+COPY python/ner/python /lab_ner/python
 
 WORKDIR /lab_ner/python
 RUN pip install --default-timeout=300 --no-cache-dir -e .

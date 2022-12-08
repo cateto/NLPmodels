@@ -12,7 +12,7 @@ def get_dependency_from_requirements(filename, folder="requirements") -> List[st
     return [x.strip() for x in content if not x.startswith("#")]
 
 
-install_requires = get_dependency_from_requirements("requirements/requirements.txt")
+install_requires = get_dependency_from_requirements("requirements.txt")
 
 # extras_require = {
 #     "analyze": get_dependency_from_requirements("requirements_analyze.txt"),
