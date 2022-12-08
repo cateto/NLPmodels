@@ -20,8 +20,14 @@ if __name__ == '__main__':
     parser.add_argument(
         "--num_epoch", help="epoch 수", default=3
     )
+
+    parser.add_argument(
+        "--max_length", help="max_length", default=128
+    )
     args, _ = parser.parse_known_args()
 
     model = NERClassificationModel()
     model.train(args)
+
+## python run_train.py --model_type kobert --model_name "monologg/kobert" --corpus_path "/repository/NER/data/k_corpus/json_data/corpus_v3.json" --export_path "/repository/som/outputs"
 

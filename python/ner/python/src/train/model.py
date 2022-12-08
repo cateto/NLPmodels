@@ -19,9 +19,10 @@ logging.basicConfig(level = logging.INFO)
 
 class RawDataToTrainingDataConverter:
 
-    def __init__(self, file_path, model_type, model_name):
+    def __init__(self, file_path, model_type, model_name, max_length):
         self.model_type = model_type
         self.model_name = model_name
+        self.max_length = max_length
         with open(file_path, encoding='utf-8-sig') as f:
             self.raw_data = json.load(f)['document']
 
@@ -61,7 +62,7 @@ class RawDataToTrainingDataConverter:
 
     def __make_featured_arr(self, label_dict):
 
-        featurer = NERDataFeaturing(self.model_type, self.model_name, label_dict)
+        featurer = NERDataFeaturing(self.model_type, self.model_name, label_dict, self.max_length)
 
         input_ids_arr = []
         attention_mask_arr = []
@@ -93,11 +94,11 @@ class RawDataToTrainingDataConverter:
 
 class NERDataFeaturing:
 
-    def __init__(self, model_type, model_name, label_dict):
+    def __init__(self, model_type, model_name, label_dict, max_length=128):
         self.__model_type = model_type
         self.__tokenizer = TOKENIZER_CLASSES[model_type].from_pretrained(model_name)
         self.__label_sequence_info = label_dict
-        self.__max_length = 128
+        self.__max_length = max_length
 
     def featuring(self, sentence_info):
         return self.__parse_sentence_info_to_feature(sentence_info)
@@ -241,6 +242,7 @@ class NERClassificationModel:
         model_type = args.model_type
         model_name = args.model_name
         num_epoch = args.num_epoch
+        max_length = args.max_length
 
         export_model_path = os.path.join(export_path, str(model_name).replace("/","-"))
 
@@ -267,7 +269,7 @@ class NERClassificationModel:
         else:
             os.makedirs(export_model_path)
             os.makedirs(export_model_path + '/data')
-            raw_data_converter = RawDataToTrainingDataConverter(corpus_path, model_type, model_name)
+            raw_data_converter = RawDataToTrainingDataConverter(corpus_path, model_type, model_name, max_length)
             train_dataset, label_dict = raw_data_converter.convert()
 
             with open(os.path.join(export_model_path, 'data/label_dict.pkl'), 'wb') as f:
